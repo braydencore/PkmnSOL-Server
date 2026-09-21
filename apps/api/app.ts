@@ -141,7 +141,12 @@ export function buildApp(): Express {
   const app = express();
 
   app.set('etag', false);
-  app.set('trust proxy', true);
+  // `true` trusts an unlimited chain of X-Forwarded-For hops, which lets a
+  // client spoof its own IP and bypass IP-based rate limiting entirely —
+  // express-rate-limit refuses to run with it for exactly that reason.
+  // Render (like most single-hop PaaS reverse proxies) adds exactly one
+  // hop, so trust exactly one.
+  app.set('trust proxy', 1);
 
   app.use(
     cors({
