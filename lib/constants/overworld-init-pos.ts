@@ -20,7 +20,20 @@ export interface AllowedSpawnPosition {
  * poposafari/client/src/types/texture.ts, and emit an {mapId, x, y}
  * triple.
  */
+/**
+ * Scripted (non-door) transitions -- not in OVERWORLD_INIT_POS since
+ * nothing walks through these, so keep this list by hand and don't let a
+ * regen of the door table below wipe it out.
+ */
+const SCRIPTED_TRANSITION_POSITIONS: AllowedSpawnPosition[] = [
+  // Catching the s000 tutorial starter sends the player to Popo Town
+  // (battle.phase.ts's isS000Tutorial() catch handler).
+  { mapId: 'p001', x: 50, y: 30 },
+];
+
 export const ALLOWED_CHANGE_MAP_POSITIONS: AllowedSpawnPosition[] = [
+  ...SCRIPTED_TRANSITION_POSITIONS,
+
   { mapId: 'p001', x: 29, y: 28 },
   { mapId: 'p001', x: 29, y: 51 },
   { mapId: 'p001', x: 32, y: 42 },
