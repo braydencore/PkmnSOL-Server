@@ -11,7 +11,7 @@ export class UserController {
     await this.userService.createUser(req.authId, body);
     req.audit = {
       action: AuditAction.CREATE_USER,
-      detail: { nickname: body.nickname, gender: body.gender },
+      detail: { gender: body.gender },
     };
     return res.status(201).json({ success: true, data: null });
   };

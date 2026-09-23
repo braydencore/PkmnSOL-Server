@@ -17,7 +17,10 @@ export const user = pgTable(
     accountId: integer('account_id')
       .primaryKey()
       .references(() => account.id, { onDelete: 'cascade' }),
-    nickname: varchar('nickname', { length: 14 }).notNull().unique(),
+    // Matches the account's own username length now that nickname is
+    // derived from it at signup rather than freely chosen (local usernames
+    // are 6-20 chars; see auth.schema.ts).
+    nickname: varchar('nickname', { length: 20 }).notNull().unique(),
     money: integer('money').notNull().default(0),
     playtime: integer('playtime').notNull().default(0),
     hasStarter: boolean('has_starter').notNull().default(true),

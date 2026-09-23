@@ -1,19 +1,6 @@
 import { z } from 'zod';
-import { GLOBAL_NICKNAME_REGEX } from '@poposerver/lib/types';
-
-const RESERVED_WORDS = ['admin', 'null', 'undefined'];
 
 export const createUserSchema = z.object({
-  nickname: z
-    .string()
-    .trim()
-    .min(2, 'Nickname must be at least 2 character')
-    .max(12, 'Nickname must be at most 12 characters')
-    .regex(GLOBAL_NICKNAME_REGEX, 'Nickname can only contain letters and numbers')
-    .refine(
-      (val) => !RESERVED_WORDS.some((w) => val.toLowerCase().includes(w)),
-      'Nickname contains reserved word',
-    ),
   gender: z.enum(['male', 'female']),
   costume: z.object({
     skin: z.string().regex(/^skin_\d+$/, 'Invalid skin format. Expected: skin_0'),

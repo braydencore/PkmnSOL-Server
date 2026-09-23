@@ -13,15 +13,6 @@ export class UserRepository {
     return result ?? null;
   }
 
-  async findByNickname(nickname: string) {
-    const [result] = await db
-      .select({ accountId: user.accountId })
-      .from(user)
-      .where(eq(user.nickname, nickname))
-      .limit(1);
-    return result ?? null;
-  }
-
   async createWithCostumes(
     accountId: number,
     nickname: string,
