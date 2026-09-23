@@ -36,6 +36,7 @@ import {
   AuditAction,
   MasterData,
   loadtestMetrics,
+  isValidChangeMapTarget,
 } from '@poposerver/lib';
 import { ensureSafariBucket } from '../api/domains/safari/safari-world';
 
@@ -501,18 +502,28 @@ export class SocketApp implements Broadcaster {
           return;
         }
 
+        // Fast-travel ("fly") into a Safari zone: the server computes the
+        // spawn itself from the map's registered entry point, so the
+        // client's x/y is never actually trusted for this path.
+        let flyOverrodePosition = false;
         if ((payload as { fly?: boolean })?.fly === true && targetMapId.startsWith('s')) {
           const entry = MasterData.getMap(targetMapId)?.entry;
           if (entry) {
             x = entry.x;
             y = entry.y;
+            flyOverrodePosition = true;
           }
         }
 
-        // if (!isValidChangeMapTarget(targetMapId, x, y)) {
-        //   socket.emit('change_map_error', { message: 'Spawn position not allowed' });
-        //   return;
-        // }
+        // Everything else (a normal door walk, or a "fly" onto a map with no
+        // registered entry point) must land on a known door-destination tile
+        // — otherwise a modified client could claim an arbitrary map/position
+        // (e.g. entering a Safari zone without a ticket, or skipping travel
+        // entirely).
+        if (!flyOverrodePosition && !isValidChangeMapTarget(targetMapId, x, y)) {
+          socket.emit('change_map_error', { message: 'Spawn position not allowed' });
+          return;
+        }
 
         try {
           const syncFromOthers = shouldSyncOtherPlayers(roomId);
