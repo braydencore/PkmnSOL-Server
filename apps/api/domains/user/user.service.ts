@@ -104,6 +104,14 @@ export class UserService {
     return base.slice(0, NICKNAME_MAX_LEN - suffix.length) + suffix;
   }
 
+  async getPublicProfile(accountId: number) {
+    const result = await this.userRepo.findPublicProfileByAccountId(accountId);
+    if (!result) {
+      throw new AppError(AppErrorMessage.USER_NOT_FOUND, 404, AppErrorCode.USER_NOT_FOUND);
+    }
+    return result;
+  }
+
   async getMyGameData(authId: string) {
     const accountId = Number(authId);
     const result = await this.userRepo.findGameDataByAccountId(accountId);

@@ -4,7 +4,7 @@ import { zodValidate } from '../../hooks/validate.hook';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { UserRepository } from './user.repository';
-import { createUserSchema } from './user.schema';
+import { createUserSchema, profileParamsSchema } from './user.schema';
 
 const router = Router();
 
@@ -20,5 +20,12 @@ router.post(
 );
 
 router.get('/users/me', sessionAuthGuard, userController.getMe);
+
+router.get(
+  '/users/:accountId/profile',
+  sessionAuthGuard,
+  zodValidate({ params: profileParamsSchema }),
+  userController.getPublicProfile,
+);
 
 export default router;

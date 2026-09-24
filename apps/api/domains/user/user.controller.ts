@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { AuditAction } from '@poposerver/lib/types';
 import { UserService } from './user.service';
-import { CreateUserInput } from './user.schema';
+import { CreateUserInput, ProfileParams } from './user.schema';
 
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -18,6 +18,12 @@ export class UserController {
 
   getMe = async (req: Request, res: Response) => {
     const data = await this.userService.getMyGameData(req.authId);
+    return res.status(200).json({ success: true, data });
+  };
+
+  getPublicProfile = async (req: Request, res: Response) => {
+    const { accountId } = req.params as unknown as ProfileParams;
+    const data = await this.userService.getPublicProfile(accountId);
     return res.status(200).json({ success: true, data });
   };
 }

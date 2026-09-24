@@ -49,6 +49,39 @@ export class UserRepository {
     });
   }
 
+  /** Fields safe to show to OTHER players (via the in-game profile card) --
+   * excludes money and live position, which stay private. */
+  async findPublicProfileByAccountId(accountId: number) {
+    const [profile] = await db
+      .select({
+        nickname: user.nickname,
+        gender: user.gender,
+        playtime: user.playtime,
+        createdAt: user.createdAt,
+      })
+      .from(user)
+      .where(eq(user.accountId, accountId))
+      .limit(1);
+
+    if (!profile) return null;
+
+    const equippedCostumes = await db
+      .select({ costumeId: userCostume.costumeId })
+      .from(userCostume)
+      .where(and(eq(userCostume.accountId, accountId), eq(userCostume.isEquipped, true)));
+
+    const [pokedexCountRow] = await db
+      .select({ count: sql<number>`count(*)`.mapWith(Number) })
+      .from(userPokedex)
+      .where(eq(userPokedex.accountId, accountId));
+
+    return {
+      profile,
+      equippedCostumes,
+      pokedexCount: pokedexCountRow?.count ?? 0,
+    };
+  }
+
   async findGameDataByAccountId(accountId: number) {
     // 1. 프로필 조회
     const [profile] = await db

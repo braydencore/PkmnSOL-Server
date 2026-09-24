@@ -10,3 +10,9 @@ export const createUserSchema = z.object({
 });
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;
+
+export const profileParamsSchema = z.object({
+  accountId: z.coerce.number().int().min(1),
+});
+
+export type ProfileParams = z.infer<typeof profileParamsSchema>;
