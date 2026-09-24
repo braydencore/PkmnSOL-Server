@@ -43,6 +43,19 @@ import { ensureSafariBucket } from '../api/domains/safari/safari-world';
 /** init_ok / change_map_ok에 실리는 사파리 스냅샷(클라 렌더 재조정의 권위 소스). */
 type SafariSnapshot = { wilds: SafariWild[]; items: SafariItem[] };
 
+/** Trims whitespace, collapses to a single line, strips control chars, and
+ * caps length. Returns null for anything that ends up empty. */
+function sanitizeChatMessage(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null;
+  const cleaned = raw
+    .replace(/[\r\n\t]+/g, ' ')
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\x00-\x1f\x7f]/g, '')
+    .trim()
+    .slice(0, CHAT_MESSAGE_MAX_LENGTH);
+  return cleaned.length > 0 ? cleaned : null;
+}
+
 function socketIp(socket: Socket): string | null {
   const fwd = socket.handshake.headers['x-forwarded-for'];
   if (typeof fwd === 'string' && fwd.length > 0) return fwd.split(',')[0].trim();
@@ -73,6 +86,9 @@ export interface SocketData {
   roomId?: string;
 }
 
+export const CHAT_MESSAGE_MAX_LENGTH = 80;
+const CHAT_MIN_INTERVAL_MS = 1200;
+
 export class SocketApp implements Broadcaster {
   private io: SocketIOServer;
 
@@ -82,6 +98,9 @@ export class SocketApp implements Broadcaster {
 
   /** In-memory 좌표 캐시: userId → { x, y }. move 핸들러에서 await 없이 좌표 업데이트 */
   private userPositions: Map<string, { x: number; y: number }> = new Map();
+
+  /** userId → 마지막 chat 전송 시각(ms). 스팸 방지용 최소 간격 체크. */
+  private lastChatAt: Map<string, number> = new Map();
   // private tickSeq = 0;
 
   constructor(httpServer: HttpServer) {
@@ -670,6 +689,26 @@ export class SocketApp implements Broadcaster {
         }
       });
 
+      socket.on('chat', (payload: { message?: unknown }) => {
+        const userId = data.userId;
+        const roomId = data.roomId;
+        if (!userId || !roomId) return;
+
+        const now = Date.now();
+        const last = this.lastChatAt.get(userId) ?? 0;
+        if (now - last < CHAT_MIN_INTERVAL_MS) return;
+
+        const message = sanitizeChatMessage(payload?.message);
+        if (!message) return;
+
+        this.lastChatAt.set(userId, now);
+
+        if (shouldSyncOtherPlayers(roomId)) {
+          socket.to(roomId).emit('chat_message', { userId, message });
+          logger.debug(`[Socket] chat userId=${userId} room=${roomId}: ${message}`);
+        }
+      });
+
       socket.on('disconnect', async (reason) => {
         logger.info(`Client disconnected: ${socket.id} (Reason: ${reason})`);
         const { authId: disconnAuthId, userId, roomId } = data;
@@ -700,6 +739,7 @@ export class SocketApp implements Broadcaster {
             });
           }
           this.userPositions.delete(userId);
+          this.lastChatAt.delete(userId);
 
           await persistUserStateFromRedisToDb(userId, { deleteFromRedis: isOwner });
 
