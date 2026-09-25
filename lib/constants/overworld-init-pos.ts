@@ -41,7 +41,6 @@ export const ALLOWED_CHANGE_MAP_POSITIONS: AllowedSpawnPosition[] = [
   { mapId: 'p001', x: 44, y: 28 },
   { mapId: 'p001', x: 44, y: 42 },
   { mapId: 'p001', x: 54, y: 28 },
-  { mapId: 'p001', x: 64, y: 40 },
 
   { mapId: 'p002', x: 6, y: 13 },
   { mapId: 'p002', x: 7, y: 13 },
@@ -68,7 +67,6 @@ export const ALLOWED_CHANGE_MAP_POSITIONS: AllowedSpawnPosition[] = [
   { mapId: 'p009', x: 1, y: 15 },
   { mapId: 'p009', x: 1, y: 16 },
 
-  { mapId: 's001', x: 10, y: 10 },
   { mapId: 's001', x: 22, y: 35 },
   { mapId: 's001', x: 23, y: 35 },
   { mapId: 's001', x: 47, y: 19 },
